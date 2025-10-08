@@ -218,6 +218,7 @@ const transformResponseData = (data: TallyWebhookData): IDataObject => {
         const option = options?.find((x) => x.id === value);
         response[key] = option ? option.text : null;
       }
+      return;
     }
 
     if (['CHECKBOXES', 'RANKING', 'MULTI_SELECT'].includes(type) && Array.isArray(value)) {
@@ -230,6 +231,7 @@ const transformResponseData = (data: TallyWebhookData): IDataObject => {
       }
 
       response[key] = values.join(',');
+      return;
     }
 
     if (['FILE_UPLOAD', 'SIGNATURE'].includes(type) && Array.isArray(value)) {
@@ -241,6 +243,7 @@ const transformResponseData = (data: TallyWebhookData): IDataObject => {
       }
 
       response[key] = values.join(',');
+      return;
     }
 
     if (type === 'MATRIX' && value && typeof value === 'object' && !Array.isArray(value)) {
@@ -253,6 +256,7 @@ const transformResponseData = (data: TallyWebhookData): IDataObject => {
             .join(',');
         }
       }
+      return;
     }
 
     response[key] = value;
