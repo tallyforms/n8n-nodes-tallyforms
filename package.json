@@ -10,25 +10,27 @@
     "submissions"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/tallyforms/n8n",
+  "homepage": "https://github.com/tallyforms/n8n-nodes-tally",
   "author": {
     "name": "Tally",
     "email": "hello@tally.so"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/tallyforms/n8n.git"
+    "url": "https://github.com/tallyforms/n8n-nodes-tally.git"
   },
   "engines": {
     "node": ">=20.15"
   },
   "main": "index.js",
   "scripts": {
-    "build": "npx rimraf dist && tsc && gulp build:icons",
+    "clean": "rm -rf dist",
+    "compile": "tsc",
+    "copy:icons": "cp nodes/Tally/tally.svg nodes/Tally/tally.dark.svg dist/nodes/Tally",
+    "build": "run-s clean compile copy:icons",
     "dev": "tsc --watch",
-    "format": "prettier nodes credentials --write",
     "lint": "eslint nodes credentials package.json",
-    "lintfix": "eslint nodes credentials package.json --fix",
+    "lint:fix": "eslint nodes credentials package.json --fix",
     "prepublishOnly": "npm run build && npm run lint -c .eslintrc.prepublish.js nodes credentials package.json"
   },
   "files": [
@@ -47,9 +49,11 @@
   "devDependencies": {
     "@typescript-eslint/parser": "~8.32.0",
     "eslint": "^8.57.0",
+    "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-n8n-nodes-base": "^1.16.3",
-    "gulp": "^5.0.0",
-    "prettier": "^3.5.3",
+    "eslint-plugin-prettier": "^5.5.4",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^3.6.2",
     "typescript": "^5.8.2"
   },
   "peerDependencies": {

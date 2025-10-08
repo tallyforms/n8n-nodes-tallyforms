@@ -1,19 +1,19 @@
 import type { ICredentialType, INodeProperties } from 'n8n-workflow';
 
 export class TallyApi implements ICredentialType {
-	name = 'tallyApi';
+  name = 'tallyApi';
 
-	displayName = 'Tally API';
+  displayName = 'Tally API';
 
-	documentationUrl = 'https://developers.tally.so/api-reference/api-keys#creating-an-api-key';
+  documentationUrl = 'https://developers.tally.so/api-reference/api-keys#creating-an-api-key';
 
-	properties: INodeProperties[] = [
-		{
-			displayName: 'API Key',
-			name: 'apiKey',
-			type: 'string',
-			typeOptions: { password: true },
-			default: '',
-		},
-	];
+  properties: INodeProperties[] = [
+    {
+      displayName: 'API Key',
+      name: 'apiKey',
+      type: 'string',
+      typeOptions: { password: true },
+      default: '',
+    },
+  ];
 }
