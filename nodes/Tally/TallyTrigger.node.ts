@@ -2,6 +2,7 @@ import type {
   IHookFunctions,
   IWebhookFunctions,
   ILoadOptionsFunctions,
+  IDataObject,
   INodeType,
   INodeTypeDescription,
   IWebhookResponseData,
@@ -161,8 +162,101 @@ export class TallyTrigger implements INodeType {
   async webhook(this: IWebhookFunctions): Promise<IWebhookResponseData> {
     const body = this.getBodyData();
 
+    if (!body?.data || typeof body?.data !== 'object') {
+      return {
+        workflowData: [[{ json: body }]],
+      };
+    }
+
+    const data = transformResponseData(body.data as TallyWebhookData);
+
     return {
-      workflowData: [[{ json: body }]],
+      workflowData: [[{ json: data }]],
     };
   }
 }
+
+type TallyWebhookField = {
+  key: string;
+  value: string | string[] | IDataObject | null;
+  type: string;
+  options?: Array<{ id: string; text: string }>;
+  columns?: Array<{ id: string; text: string }>;
+};
+
+type TallyWebhookData = {
+  responseId: string;
+  formId: string;
+  formName: string;
+  respondentId: string;
+  createdAt: string;
+  fields: TallyWebhookField[];
+};
+
+const transformResponseData = (data: TallyWebhookData): IDataObject => {
+  const response: IDataObject = {
+    id: data.responseId,
+    formId: data.formId,
+    formName: data.formName,
+    respondentId: data.respondentId,
+    createdAt: data.createdAt,
+  };
+
+  data.fields.forEach(({ key, value, type, options, columns }) => {
+    if (['MULTIPLE_CHOICE', 'DROPDOWN'].includes(type)) {
+      if (Array.isArray(value)) {
+        const values: string[] = [];
+        for (const x of value) {
+          const option = options?.find((y) => y.id === x);
+          if (option) {
+            values.push(option.text);
+          }
+        }
+
+        response[key] = values.join(',');
+      } else {
+        const option = options?.find((x) => x.id === value);
+        response[key] = option ? option.text : null;
+      }
+    }
+
+    if (['CHECKBOXES', 'RANKING', 'MULTI_SELECT'].includes(type) && Array.isArray(value)) {
+      const values: string[] = [];
+      for (const x of value) {
+        const option = options?.find((y) => y.id === x);
+        if (option) {
+          values.push(option.text);
+        }
+      }
+
+      response[key] = values.join(',');
+    }
+
+    if (['FILE_UPLOAD', 'SIGNATURE'].includes(type) && Array.isArray(value)) {
+      const values: string[] = [];
+      for (const x of value) {
+        if (typeof x === 'object' && x !== null && 'url' in x) {
+          values.push((x as { url: string }).url);
+        }
+      }
+
+      response[key] = values.join(',');
+    }
+
+    if (type === 'MATRIX' && value && typeof value === 'object' && !Array.isArray(value)) {
+      for (const x of Object.keys(value)) {
+        const rowKey = `${key}_${x}`;
+        const rowValue = value[x];
+        if (Array.isArray(rowValue)) {
+          response[rowKey] = rowValue
+            .map((y) => columns?.find((z) => z.id === y)?.text ?? '')
+            .join(',');
+        }
+      }
+    }
+
+    response[key] = value;
+  });
+
+  return response;
+};
