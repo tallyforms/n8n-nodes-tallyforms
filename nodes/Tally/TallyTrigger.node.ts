@@ -1,14 +1,18 @@
 import type {
   IHookFunctions,
   IWebhookFunctions,
-  IDataObject,
+  ILoadOptionsFunctions,
   INodeType,
   INodeTypeDescription,
   IWebhookResponseData,
+  INodePropertyOptions,
 } from 'n8n-workflow';
-import { NodeConnectionTypes } from 'n8n-workflow';
+import { ApplicationError, NodeConnectionTypes } from 'n8n-workflow';
 
-import { tallyApiRequest, getForms } from './GenericFunctions';
+type ITallyAPIResponseForm = {
+  id: string;
+  name: string | null;
+};
 
 export class TallyTrigger implements INodeType {
   description: INodeTypeDescription = {
@@ -56,7 +60,26 @@ export class TallyTrigger implements INodeType {
 
   methods = {
     loadOptions: {
-      getForms,
+      async getForms(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+        const { apiKey, baseUrl } = await this.getCredentials('tallyApi');
+
+        const response = await this.helpers.httpRequest({
+          url: `${baseUrl}/forms`,
+          headers: { Authorization: `Bearer ${apiKey}` },
+          method: 'GET',
+          qs: { limit: 500 },
+        });
+
+        const data: ITallyAPIResponseForm[] = response?.items || response;
+        if (!Array.isArray(data)) {
+          throw new ApplicationError('No forms returned from Tally API', { level: 'warning' });
+        }
+
+        return data.map((form) => ({
+          name: form.name || `Untitled form (${form.id})`,
+          value: form.id,
+        }));
+      },
     },
   };
 
@@ -65,9 +88,15 @@ export class TallyTrigger implements INodeType {
       async checkExists(this: IHookFunctions): Promise<boolean> {
         const webhookUrl = this.getNodeWebhookUrl('default');
         const webhookData = this.getWorkflowStaticData('node');
-        const formId = this.getNodeParameter('formId') as string;
+        const formId = this.getNodeParameter('formId');
 
-        const responseData = await tallyApiRequest.call(this, 'GET', '/webhooks', {}, {});
+        const { apiKey, baseUrl } = await this.getCredentials('tallyApi');
+
+        const responseData = await this.helpers.httpRequest({
+          url: `${baseUrl}/webhooks`,
+          headers: { Authorization: `Bearer ${apiKey}` },
+          method: 'GET',
+        });
 
         if (responseData && responseData.webhooks) {
           for (const webhook of responseData.webhooks) {
@@ -82,7 +111,9 @@ export class TallyTrigger implements INodeType {
       },
       async create(this: IHookFunctions): Promise<boolean> {
         const webhookUrl = this.getNodeWebhookUrl('default');
-        const formId = this.getNodeParameter('formId') as string;
+        const formId = this.getNodeParameter('formId');
+
+        const { apiKey, baseUrl } = await this.getCredentials('tallyApi');
 
         const body = {
           formId,
@@ -91,7 +122,13 @@ export class TallyTrigger implements INodeType {
           externalSubscriber: 'N8N',
         };
 
-        const responseData = await tallyApiRequest.call(this, 'POST', '/webhooks', body, {});
+        const responseData = await this.helpers.httpRequest({
+          url: `${baseUrl}/webhooks`,
+          headers: { Authorization: `Bearer ${apiKey}` },
+          method: 'POST',
+          body,
+          json: true,
+        });
 
         if (responseData.id === undefined) {
           return false;
@@ -105,10 +142,14 @@ export class TallyTrigger implements INodeType {
         const webhookData = this.getWorkflowStaticData('node');
 
         if (webhookData.webhookId !== undefined) {
-          const endpoint = `/webhooks/${webhookData.webhookId}`;
+          const { apiKey, baseUrl } = await this.getCredentials('tallyApi');
 
           try {
-            await tallyApiRequest.call(this, 'DELETE', endpoint, {}, {});
+            await this.helpers.httpRequest({
+              url: `${baseUrl}/webhooks/${webhookData.webhookId}`,
+              headers: { Authorization: `Bearer ${apiKey}` },
+              method: 'DELETE',
+            });
           } catch (e) {
             return false;
           }
@@ -122,7 +163,7 @@ export class TallyTrigger implements INodeType {
   };
 
   async webhook(this: IWebhookFunctions): Promise<IWebhookResponseData> {
-    const bodyData = this.getBodyData() as unknown as IDataObject;
+    const bodyData = this.getBodyData();
 
     return {
       workflowData: [[{ json: bodyData }]],

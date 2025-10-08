@@ -15,5 +15,11 @@ export class TallyApi implements ICredentialType {
       typeOptions: { password: true },
       default: '',
     },
+    {
+      displayName: 'Base URL',
+      name: 'baseUrl',
+      type: 'string',
+      default: 'https://api.tally.so',
+    },
   ];
 }
