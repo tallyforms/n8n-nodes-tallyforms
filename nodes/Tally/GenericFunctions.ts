@@ -50,7 +50,7 @@ export async function getForms(this: ILoadOptionsFunctions): Promise<INodeProper
 	}
 
 	return responseData.items.map((form: IDataObject) => ({
-		name: `${form.name || 'Untitled form'} (${form.id})`,
+		name: form.name || `Untitled form (${form.id})`,
 		value: form.id,
 	})) satisfies INodePropertyOptions[];
 }
