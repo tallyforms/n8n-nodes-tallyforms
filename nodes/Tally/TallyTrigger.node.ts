@@ -14,7 +14,7 @@ export class TallyTrigger implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'Tally Trigger',
 		name: 'tallyTrigger',
-		icon: 'file:tally.svg',
+		icon: { light: 'file:tally.svg', dark: 'file:tally.dark.svg' },
 		group: ['trigger'],
 		version: 1,
 		subtitle: '=Form: {{$parameter["formId"]}}',
