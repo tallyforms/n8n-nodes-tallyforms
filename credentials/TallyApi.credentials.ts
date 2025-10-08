@@ -1,12 +1,14 @@
-import type { ICredentialType, INodeProperties } from 'n8n-workflow';
+import type {
+  IAuthenticateGeneric,
+  ICredentialTestRequest,
+  ICredentialType,
+  INodeProperties,
+} from 'n8n-workflow';
 
 export class TallyApi implements ICredentialType {
   name = 'tallyApi';
-
   displayName = 'Tally API';
-
   documentationUrl = 'https://developers.tally.so/api-reference/api-keys';
-
   properties: INodeProperties[] = [
     {
       displayName: 'API Key',
@@ -22,4 +24,20 @@ export class TallyApi implements ICredentialType {
       default: 'https://api.tally.so',
     },
   ];
+
+  authenticate: IAuthenticateGeneric = {
+    type: 'generic',
+    properties: {
+      headers: {
+        Authorization: '={{"Bearer " + $credentials.apiKey}}',
+      },
+    },
+  };
+
+  test: ICredentialTestRequest = {
+    request: {
+      baseURL: '={{$credentials?.baseUrl}}',
+      url: '/users/me',
+    },
+  };
 }
