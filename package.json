@@ -1,5 +1,5 @@
 {
-  "name": "n8n-nodes-tally",
+  "name": "@tallyforms/n8n-node",
   "version": "0.1.0",
   "description": "n8n node for Tally form submissions",
   "keywords": [
@@ -10,14 +10,14 @@
     "submissions"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/tallyforms/n8n-nodes-tally",
+  "homepage": "https://github.com/tallyforms/n8n-node",
   "author": {
     "name": "Tally",
     "email": "hello@tally.so"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/tallyforms/n8n-nodes-tally.git"
+    "url": "https://github.com/tallyforms/n8n-node.git"
   },
   "engines": {
     "node": ">=20.15"
