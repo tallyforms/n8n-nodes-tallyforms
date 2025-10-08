@@ -87,23 +87,24 @@ export class TallyTrigger implements INodeType {
     default: {
       async checkExists(this: IHookFunctions): Promise<boolean> {
         const webhookUrl = this.getNodeWebhookUrl('default');
-        const webhookData = this.getWorkflowStaticData('node');
+        const data = this.getWorkflowStaticData('node');
         const formId = this.getNodeParameter('formId');
 
         const { apiKey, baseUrl } = await this.getCredentials('tallyApi');
-
-        const responseData = await this.helpers.httpRequest({
+        const response = await this.helpers.httpRequest({
           url: `${baseUrl}/webhooks`,
           headers: { Authorization: `Bearer ${apiKey}` },
           method: 'GET',
         });
 
-        if (responseData && responseData.webhooks) {
-          for (const webhook of responseData.webhooks) {
-            if (webhook.url === webhookUrl && webhook.formId === formId) {
-              webhookData.webhookId = webhook.id;
-              return true;
-            }
+        if (!Array.isArray(response?.webhooks)) {
+          return false;
+        }
+
+        for (const webhook of response.webhooks) {
+          if (webhook.url === webhookUrl && webhook.formId === formId) {
+            data.webhookId = webhook.id;
+            return true;
           }
         }
 
@@ -114,48 +115,43 @@ export class TallyTrigger implements INodeType {
         const formId = this.getNodeParameter('formId');
 
         const { apiKey, baseUrl } = await this.getCredentials('tallyApi');
-
-        const body = {
-          formId,
-          url: webhookUrl,
-          eventTypes: ['FORM_RESPONSE'],
-          externalSubscriber: 'N8N',
-        };
-
-        const responseData = await this.helpers.httpRequest({
+        const response = await this.helpers.httpRequest({
           url: `${baseUrl}/webhooks`,
           headers: { Authorization: `Bearer ${apiKey}` },
           method: 'POST',
-          body,
+          body: {
+            formId,
+            url: webhookUrl,
+            eventTypes: ['FORM_RESPONSE'],
+            externalSubscriber: 'N8N',
+          },
           json: true,
         });
 
-        if (responseData.id === undefined) {
+        if (!response?.id) {
           return false;
         }
 
-        const webhookData = this.getWorkflowStaticData('node');
-        webhookData.webhookId = responseData.id;
+        const data = this.getWorkflowStaticData('node');
+
+        data.webhookId = response.id;
+
         return true;
       },
       async delete(this: IHookFunctions): Promise<boolean> {
-        const webhookData = this.getWorkflowStaticData('node');
-
-        if (webhookData.webhookId !== undefined) {
-          const { apiKey, baseUrl } = await this.getCredentials('tallyApi');
-
-          try {
-            await this.helpers.httpRequest({
-              url: `${baseUrl}/webhooks/${webhookData.webhookId}`,
-              headers: { Authorization: `Bearer ${apiKey}` },
-              method: 'DELETE',
-            });
-          } catch (e) {
-            return false;
-          }
-
-          delete webhookData.webhookId;
+        const data = this.getWorkflowStaticData('node');
+        if (!data.webhookId) {
+          return false;
         }
+
+        const { apiKey, baseUrl } = await this.getCredentials('tallyApi');
+        await this.helpers.httpRequest({
+          url: `${baseUrl}/webhooks/${data.webhookId}`,
+          headers: { Authorization: `Bearer ${apiKey}` },
+          method: 'DELETE',
+        });
+
+        delete data.webhookId;
 
         return true;
       },
@@ -163,10 +159,10 @@ export class TallyTrigger implements INodeType {
   };
 
   async webhook(this: IWebhookFunctions): Promise<IWebhookResponseData> {
-    const bodyData = this.getBodyData();
+    const body = this.getBodyData();
 
     return {
-      workflowData: [[{ json: bodyData }]],
+      workflowData: [[{ json: body }]],
     };
   }
 }
