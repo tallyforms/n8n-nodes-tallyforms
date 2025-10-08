@@ -1,23 +1,24 @@
 {
-  "name": "@tallyforms/n8n-node",
+  "name": "n8n-nodes-tallyforms",
   "version": "0.1.0",
   "description": "n8n node for Tally form submissions",
   "keywords": [
     "n8n-community-node-package",
     "n8n",
     "tally",
+    "tallyforms",
     "forms",
     "submissions"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/tallyforms/n8n-node",
+  "homepage": "https://github.com/tallyforms/n8n-nodes-tallyforms",
   "author": {
     "name": "Tally",
     "email": "hello@tally.so"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tallyforms/n8n-node.git"
+    "url": "git+https://github.com/tallyforms/n8n-nodes-tallyforms.git"
   },
   "engines": {
     "node": ">=20.15"
