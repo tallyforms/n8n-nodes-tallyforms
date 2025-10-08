@@ -5,7 +5,7 @@ export class TallyApi implements ICredentialType {
 
 	displayName = 'Tally API';
 
-	documentationUrl = 'https://developers.tally.so';
+	documentationUrl = 'https://developers.tally.so/api-reference/api-keys#creating-an-api-key';
 
 	properties: INodeProperties[] = [
 		{

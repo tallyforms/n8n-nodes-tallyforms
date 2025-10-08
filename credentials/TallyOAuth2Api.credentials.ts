@@ -7,7 +7,7 @@ export class TallyOAuth2Api implements ICredentialType {
 
 	displayName = 'Tally OAuth2 API';
 
-	documentationUrl = 'https://developers.tally.so';
+	documentationUrl = 'https://tally.so/help/n8n';
 
 	properties: INodeProperties[] = [
 		{
