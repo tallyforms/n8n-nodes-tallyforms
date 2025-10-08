@@ -18,9 +18,10 @@ export async function tallyApiRequest(
   body: IDataObject = {},
   query: IDataObject = {},
 ): Promise<any> {
-  const authentication = this.getNodeParameter('authentication', 0) as string;
+  const credentials = await this.getCredentials<{ apiKey: string }>('tallyApi');
 
   const options: IRequestOptions = {
+    headers: { Authorization: `Bearer ${credentials.apiKey}` },
     method,
     body,
     qs: query || {},
@@ -33,15 +34,7 @@ export async function tallyApiRequest(
   }
 
   try {
-    if (authentication === 'accessToken') {
-      const credentials = await this.getCredentials<{ apiKey: string }>('tallyApi');
-      options.headers = {
-        Authorization: `Bearer ${credentials.apiKey}`,
-      };
-      return await this.helpers.request(options);
-    } else {
-      return await this.helpers.requestOAuth2.call(this, 'tallyOAuth2Api', options);
-    }
+    return await this.helpers.request(options);
   } catch (error) {
     throw new NodeApiError(this.getNode(), error as JsonObject);
   }
