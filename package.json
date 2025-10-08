@@ -37,7 +37,8 @@
   "n8n": {
     "n8nNodesApiVersion": 1,
     "credentials": [
-      "dist/credentials/TallyApi.credentials.js"
+      "dist/credentials/TallyApi.credentials.js",
+      "dist/credentials/TallyOAuth2Api.credentials.js"
     ],
     "nodes": [
       "dist/nodes/Tally/TallyTrigger.node.js"

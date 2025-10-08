@@ -18,12 +18,9 @@ export async function tallyApiRequest(
 	body: IDataObject = {},
 	query: IDataObject = {},
 ): Promise<any> {
-	const credentials = await this.getCredentials<{ apiKey: string }>('tallyApi');
+	const authentication = this.getNodeParameter('authentication', 0) as string;
 
 	const options: IRequestOptions = {
-		headers: {
-			Authorization: `Bearer ${credentials.apiKey}`,
-		},
 		method,
 		body,
 		qs: query || {},
@@ -36,20 +33,28 @@ export async function tallyApiRequest(
 	}
 
 	try {
-		return await this.helpers.request(options);
+		if (authentication === 'accessToken') {
+			const credentials = await this.getCredentials<{ apiKey: string }>('tallyApi');
+			options.headers = {
+				Authorization: `Bearer ${credentials.apiKey}`,
+			};
+			return await this.helpers.request(options);
+		} else {
+			return await this.helpers.requestOAuth2.call(this, 'tallyOAuth2Api', options);
+		}
 	} catch (error) {
 		throw new NodeApiError(this.getNode(), error as JsonObject);
 	}
 }
 
 export async function getForms(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
-	const responseData = await tallyApiRequest.call(this, 'GET', '/forms', { limit: 500 }, {});
-
-	if (!responseData || !responseData.items || !Array.isArray(responseData.items)) {
+	const response = await tallyApiRequest.call(this, 'GET', '/forms', {}, { limit: 500 });
+	if (!Array.isArray(response?.items || response)) {
 		throw new ApplicationError('No forms returned from Tally API', { level: 'warning' });
 	}
 
-	return responseData.items.map((form: IDataObject) => ({
+	const data = response?.items || response;
+	return data.map((form: IDataObject) => ({
 		name: form.name || `Untitled form (${form.id})`,
 		value: form.id,
 	})) satisfies INodePropertyOptions[];
