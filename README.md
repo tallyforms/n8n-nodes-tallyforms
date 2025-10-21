@@ -12,3 +12,7 @@ Follow the [installation guide](https://docs.n8n.io/integrations/community-nodes
 2. Create the Tally Trigger
 3. Create a credential for the Tally Trigger using your API key
 4. Select the form for which you want to trigger workflows on submission
+
+## Developers
+
+For instructions on testing this node on a local n8n instance for development purposes, see https://docs.n8n.io/integrations/creating-nodes/test/run-node-locally/
