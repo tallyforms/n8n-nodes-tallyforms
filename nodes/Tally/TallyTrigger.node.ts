@@ -10,6 +10,8 @@ import type {
 } from 'n8n-workflow';
 import { ApplicationError, NodeConnectionTypes } from 'n8n-workflow';
 
+const BASE_URL = 'https://api.tally.so';
+
 type ITallyAPIResponseForm = {
   id: string;
   name: string | null;
@@ -62,11 +64,8 @@ export class TallyTrigger implements INodeType {
   methods = {
     loadOptions: {
       async getForms(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
-        const { apiKey, baseUrl } = await this.getCredentials('tallyApi');
-
-        const response = await this.helpers.httpRequest({
-          url: `${baseUrl}/forms`,
-          headers: { Authorization: `Bearer ${apiKey}` },
+        const response = await this.helpers.httpRequestWithAuthentication.call(this, 'tallyApi', {
+          url: `${BASE_URL}/forms`,
           method: 'GET',
           qs: { limit: 500 },
         });
@@ -91,10 +90,8 @@ export class TallyTrigger implements INodeType {
         const data = this.getWorkflowStaticData('node');
         const formId = this.getNodeParameter('formId');
 
-        const { apiKey, baseUrl } = await this.getCredentials('tallyApi');
-        const response = await this.helpers.httpRequest({
-          url: `${baseUrl}/webhooks`,
-          headers: { Authorization: `Bearer ${apiKey}` },
+        const response = await this.helpers.httpRequestWithAuthentication.call(this, 'tallyApi', {
+          url: `${BASE_URL}/webhooks`,
           method: 'GET',
         });
 
@@ -115,10 +112,8 @@ export class TallyTrigger implements INodeType {
         const webhookUrl = this.getNodeWebhookUrl('default');
         const formId = this.getNodeParameter('formId');
 
-        const { apiKey, baseUrl } = await this.getCredentials('tallyApi');
-        const response = await this.helpers.httpRequest({
-          url: `${baseUrl}/webhooks`,
-          headers: { Authorization: `Bearer ${apiKey}` },
+        const response = await this.helpers.httpRequestWithAuthentication.call(this, 'tallyApi', {
+          url: `${BASE_URL}/webhooks`,
           method: 'POST',
           body: {
             formId,
@@ -145,10 +140,8 @@ export class TallyTrigger implements INodeType {
           return false;
         }
 
-        const { apiKey, baseUrl } = await this.getCredentials('tallyApi');
-        await this.helpers.httpRequest({
-          url: `${baseUrl}/webhooks/${data.webhookId}`,
-          headers: { Authorization: `Bearer ${apiKey}` },
+        await this.helpers.httpRequestWithAuthentication.call(this, 'tallyApi', {
+          url: `${BASE_URL}/webhooks/${data.webhookId}`,
           method: 'DELETE',
         });
 

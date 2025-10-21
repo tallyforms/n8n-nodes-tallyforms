@@ -17,12 +17,6 @@ export class TallyApi implements ICredentialType {
       typeOptions: { password: true },
       default: '',
     },
-    {
-      displayName: 'Base URL',
-      name: 'baseUrl',
-      type: 'string',
-      default: 'https://api.tally.so',
-    },
   ];
 
   authenticate: IAuthenticateGeneric = {
@@ -36,7 +30,7 @@ export class TallyApi implements ICredentialType {
 
   test: ICredentialTestRequest = {
     request: {
-      baseURL: '={{$credentials?.baseUrl}}',
+      baseURL: 'https://api.tally.so',
       url: '/users/me',
     },
   };
