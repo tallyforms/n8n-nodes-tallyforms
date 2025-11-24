@@ -171,6 +171,7 @@ export class TallyTrigger implements INodeType {
 
 type TallyWebhookField = {
   key: string;
+  label: string;
   value: string | string[] | IDataObject | null;
   type: string;
   options?: Array<{ id: string; text: string }>;
@@ -195,7 +196,9 @@ const transformResponseData = (data: TallyWebhookData): IDataObject => {
     createdAt: data.createdAt,
   };
 
-  data.fields.forEach(({ key, value, type, options, columns }) => {
+  data.fields.forEach(({ key, label, value, type, options, columns }) => {
+    let transformedValue: string | null = null;
+
     if (['MULTIPLE_CHOICE', 'DROPDOWN'].includes(type)) {
       if (Array.isArray(value)) {
         const values: string[] = [];
@@ -205,16 +208,12 @@ const transformResponseData = (data: TallyWebhookData): IDataObject => {
             values.push(option.text);
           }
         }
-
-        response[key] = values.join(',');
+        transformedValue = values.join(',');
       } else {
         const option = options?.find((x) => x.id === value);
-        response[key] = option ? option.text : null;
+        transformedValue = option ? option.text : null;
       }
-      return;
-    }
-
-    if (['CHECKBOXES', 'RANKING', 'MULTI_SELECT'].includes(type) && Array.isArray(value)) {
+    } else if (['CHECKBOXES', 'RANKING', 'MULTI_SELECT'].includes(type) && Array.isArray(value)) {
       const values: string[] = [];
       for (const x of value) {
         const option = options?.find((y) => y.id === x);
@@ -222,37 +221,40 @@ const transformResponseData = (data: TallyWebhookData): IDataObject => {
           values.push(option.text);
         }
       }
-
-      response[key] = values.join(',');
-      return;
-    }
-
-    if (['FILE_UPLOAD', 'SIGNATURE'].includes(type) && Array.isArray(value)) {
+      transformedValue = values.join(',');
+    } else if (['FILE_UPLOAD', 'SIGNATURE'].includes(type) && Array.isArray(value)) {
       const values: string[] = [];
       for (const x of value) {
         if (typeof x === 'object' && x !== null && 'url' in x) {
           values.push((x as { url: string }).url);
         }
       }
-
-      response[key] = values.join(',');
-      return;
-    }
-
-    if (type === 'MATRIX' && value && typeof value === 'object' && !Array.isArray(value)) {
+      transformedValue = values.join(',');
+    } else if (type === 'MATRIX' && value && typeof value === 'object' && !Array.isArray(value)) {
       for (const x of Object.keys(value)) {
         const rowKey = `${key}_${x}`;
         const rowValue = value[x];
         if (Array.isArray(rowValue)) {
-          response[rowKey] = rowValue
+          const matrixValue = rowValue
             .map((y) => columns?.find((z) => z.id === y)?.text ?? '')
             .join(',');
+          response[rowKey] = {
+            label,
+            value: matrixValue,
+            type,
+          };
         }
       }
       return;
+    } else {
+      transformedValue = value as string | null;
     }
 
-    response[key] = value;
+    response[key] = {
+      label,
+      value: transformedValue,
+      type,
+    };
   });
 
   return response;
