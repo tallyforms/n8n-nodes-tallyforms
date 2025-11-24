@@ -175,6 +175,7 @@ type TallyWebhookField = {
   value: string | string[] | IDataObject | null;
   type: string;
   options?: Array<{ id: string; text: string }>;
+  rows?: Array<{ id: string; text: string }>;
   columns?: Array<{ id: string; text: string }>;
 };
 
@@ -196,7 +197,7 @@ const transformResponseData = (data: TallyWebhookData): IDataObject => {
     createdAt: data.createdAt,
   };
 
-  data.fields.forEach(({ key, label, value, type, options, columns }) => {
+  data.fields.forEach(({ key, label, value, type, options, rows, columns }) => {
     let transformedValue: string | null = null;
 
     if (['MULTIPLE_CHOICE', 'DROPDOWN'].includes(type)) {
@@ -238,8 +239,12 @@ const transformResponseData = (data: TallyWebhookData): IDataObject => {
           const matrixValue = rowValue
             .map((y) => columns?.find((z) => z.id === y)?.text ?? '')
             .join(',');
+
+          const rowText = rows?.find((r) => r.id === x)?.text || 'Untitled row';
+          const matrixLabel = label ? `${label} [${rowText}]` : rowText;
+
           response[rowKey] = {
-            label,
+            label: matrixLabel,
             value: matrixValue,
             type,
           };
