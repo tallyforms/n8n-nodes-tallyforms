@@ -24,6 +24,7 @@ export class TallyTrigger implements INodeType {
     icon: { light: 'file:tally.svg', dark: 'file:tally.dark.svg' },
     group: ['trigger'],
     version: 2,
+    defaultVersion: 2,
     subtitle: '=Form: {{$parameter["formId"]}}',
     description: 'Starts the workflow on a Tally form submission',
     defaults: {
