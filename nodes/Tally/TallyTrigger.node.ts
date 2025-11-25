@@ -23,7 +23,7 @@ export class TallyTrigger implements INodeType {
     name: 'tallyTrigger',
     icon: { light: 'file:tally.svg', dark: 'file:tally.dark.svg' },
     group: ['trigger'],
-    version: 2,
+    version: [1, 2],
     defaultVersion: 2,
     subtitle: '=Form: {{$parameter["formId"]}}',
     description: 'Starts the workflow on a Tally form submission',
@@ -162,7 +162,8 @@ export class TallyTrigger implements INodeType {
       };
     }
 
-    const data = transformResponseData(body.data as TallyWebhookData);
+    const useStructuredFormat = this.getNode().typeVersion >= 2;
+    const data = transformResponseData(body.data as TallyWebhookData, useStructuredFormat);
 
     return {
       workflowData: [[{ json: data }]],
@@ -189,7 +190,10 @@ type TallyWebhookData = {
   fields: TallyWebhookField[];
 };
 
-const transformResponseData = (data: TallyWebhookData): IDataObject => {
+const transformResponseData = (
+  data: TallyWebhookData,
+  useStructuredFormat: boolean,
+): IDataObject => {
   const response: IDataObject = {
     id: data.responseId,
     formId: data.formId,
@@ -241,14 +245,13 @@ const transformResponseData = (data: TallyWebhookData): IDataObject => {
             .map((y) => columns?.find((z) => z.id === y)?.text ?? '')
             .join(',');
 
-          const rowText = rows?.find((r) => r.id === x)?.text || 'Untitled row';
-          const matrixLabel = label ? `${label} [${rowText}]` : rowText;
-
-          response[rowKey] = {
-            label: matrixLabel,
-            value: matrixValue,
-            type,
-          };
+          if (useStructuredFormat) {
+            const rowText = rows?.find((r) => r.id === x)?.text || 'Untitled row';
+            const matrixLabel = label ? `${label} [${rowText}]` : rowText;
+            response[rowKey] = { label: matrixLabel, value: matrixValue, type };
+          } else {
+            response[rowKey] = matrixValue;
+          }
         }
       }
       return;
@@ -256,11 +259,9 @@ const transformResponseData = (data: TallyWebhookData): IDataObject => {
       transformedValue = value as string | null;
     }
 
-    response[key] = {
-      label,
-      value: transformedValue,
-      type,
-    };
+    response[key] = useStructuredFormat
+      ? { label, value: transformedValue, type }
+      : transformedValue;
   });
 
   return response;
