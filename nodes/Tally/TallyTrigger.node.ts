@@ -187,6 +187,8 @@ type TallyWebhookData = {
   formName: string;
   respondentId: string;
   createdAt: string;
+  submissionPdfUrl?: string;
+  submissionPreviewUrl?: string;
   fields: TallyWebhookField[];
 };
 
@@ -200,6 +202,8 @@ const transformResponseData = (
     formName: data.formName,
     respondentId: data.respondentId,
     createdAt: data.createdAt,
+    submissionPdfUrl: data.submissionPdfUrl ?? null,
+    submissionPreviewUrl: data.submissionPreviewUrl ?? null,
   };
 
   data.fields.forEach(({ key, label, value, type, options, rows, columns }) => {
