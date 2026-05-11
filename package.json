@@ -21,7 +21,7 @@
     "url": "git+https://github.com/tallyforms/n8n-nodes-tallyforms.git"
   },
   "engines": {
-    "node": ">=20.15"
+    "node": ">=24.15"
   },
   "main": "index.js",
   "scripts": {
